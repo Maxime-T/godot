@@ -40,6 +40,7 @@ class EditorData;
 class EditorSelection;
 class MenuButton;
 class PanelContainer;
+class RefactorUniqueNameDialog;
 class RenameDialog;
 class ReparentDialog;
 class Shader;
@@ -163,6 +164,8 @@ class SceneTreeDock : public EditorDock {
 	ConfirmationDialog *editable_instance_remove_dialog = nullptr;
 	ConfirmationDialog *placeholder_editable_instance_remove_dialog = nullptr;
 
+	RefactorUniqueNameDialog *refactor_unique_name_dialog = nullptr;
+
 	ReparentDialog *reparent_dialog = nullptr;
 	EditorFileDialog *new_scene_from_dialog = nullptr;
 
@@ -229,6 +232,7 @@ class SceneTreeDock : public EditorDock {
 
 	void _node_selected();
 	void _node_renamed();
+	void _node_unique_renamed(Node *p_node, const StringName &p_old_name, const StringName &p_new_name);
 	void _script_created(Ref<Script> p_script);
 	void _shader_created(Ref<Shader> p_shader);
 	void _script_creation_closed();

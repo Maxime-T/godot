@@ -727,6 +727,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	_initial_set("docks/scene_tree/center_node_on_reparent", false);
 	_initial_set("docks/scene_tree/hide_filtered_out_parents", true);
 	_initial_set("docks/scene_tree/accessibility_warnings", false);
+	EDITOR_SETTING_BASIC(Variant::INT, PROPERTY_HINT_ENUM, "docks/scene_tree/unique_name_refactor", 0, "Show Popup,Always Refactor,Never Refactor")
 
 	// FileSystem
 	EDITOR_SETTING(Variant::INT, PROPERTY_HINT_RANGE, "docks/filesystem/thumbnail_size", 64, "32,224,16")
