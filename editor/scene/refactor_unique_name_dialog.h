@@ -38,6 +38,7 @@ class RefactorUniqueNameDialog : public ConfirmationDialog {
 	GDCLASS(RefactorUniqueNameDialog, ConfirmationDialog);
 	enum {
 		MSG_ID_SCRIPTS = 0,
+		MSG_ID_SHARED_SCRIPTS = 1,
 	};
 
 	enum PopupSettings {
@@ -57,10 +58,16 @@ class RefactorUniqueNameDialog : public ConfirmationDialog {
 
 	SceneTreeSelector *scene_tree_selector = nullptr;
 
+	// Other files using the scripts of the current refactor, by script path.
+	HashMap<String, Vector<String>> shared_scripts;
+	ConfirmationDialog *shared_scripts_confirmation = nullptr;
+
 	Node *get_scene_root() const;
 
 	void _next();
+	void _apply_refactor();
 	void _update_validation_panel();
+	String _get_shared_scripts_text(const HashSet<Node *> &p_nodes) const;
 	void _popup_refactor(const RefactorData &p_refactor_data, const HashSet<ObjectID> &p_nodes_to_consider);
 	void _refactor_unique_name(const RefactorData &p_refactor_data, const HashSet<Node *> &p_nodes);
 	HashSet<ObjectID> _get_nodes_to_consider(const StringName &p_old_name);

@@ -1031,10 +1031,21 @@ void SceneTreeEditor::_node_renamed(Node *p_node) {
 	_update_if_clean();
 }
 
-void SceneTreeEditor::_emit_node_unique_renamed(Node *p_node, const StringName &p_old_name, const StringName &p_new_name) {
+void SceneTreeEditor::_emit_node_unique_renamed(Node *p_node, const StringName &p_name_before_rename, bool p_undo) {
 	ERR_FAIL_NULL(p_node);
 
-	emit_signal(SNAME("node_unique_renamed"), p_node, p_old_name, p_new_name);
+	// Nothing to refactor if the name did not change (or not yet), or if the node lost its unique name
+	// because the new one was already taken.
+	const StringName current_name = p_node->get_name();
+	if (current_name == p_name_before_rename || !p_node->is_unique_name_in_owner()) {
+		return;
+	}
+
+	if (p_undo) {
+		emit_signal(SNAME("node_unique_renamed"), p_node, current_name, p_name_before_rename);
+	} else {
+		emit_signal(SNAME("node_unique_renamed"), p_node, p_name_before_rename, current_name);
+	}
 }
 
 void SceneTreeEditor::_update_tree(bool p_scroll_to_selected) {
@@ -1765,6 +1776,9 @@ void SceneTreeEditor::rename_node(Node *p_node, const String &p_name, TreeItem *
 		emit_signal(SNAME("node_prerename"), p_node, new_name);
 
 		StringName old_name = p_node->get_name();
+		if (node_was_unique_name) {
+			undo_redo->add_undo_method(this, "_emit_node_unique_renamed", p_node, old_name, true);
+		}
 		undo_redo->add_undo_method(p_node, "set_name", old_name);
 		undo_redo->add_undo_method(item, "set_metadata", 0, _get_node_path(p_node));
 		undo_redo->add_undo_method(item, "set_text", 0, old_name);
@@ -1778,10 +1792,8 @@ void SceneTreeEditor::rename_node(Node *p_node, const String &p_name, TreeItem *
 		}
 
 		if (node_was_unique_name) {
-			// Emitted as part of the action, so that undoing and redoing the rename
-			// also gives a chance to refactor the references to the unique name.
-			undo_redo->add_do_method(this, "_emit_node_unique_renamed", p_node, old_name, new_name);
-			undo_redo->add_undo_method(this, "_emit_node_unique_renamed", p_node, new_name, old_name);
+			undo_redo->add_do_method(this, "_emit_node_unique_renamed", p_node, old_name, false);
+			undo_redo->add_undo_method(this, "_emit_node_unique_renamed", p_node, old_name, true);
 		}
 
 		undo_redo->commit_action();
@@ -2297,7 +2309,7 @@ void SceneTreeEditor::set_update_when_invisible(bool p_enable) {
 
 void SceneTreeEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_update_tree"), &SceneTreeEditor::_update_tree, DEFVAL(false)); // Still used by UndoRedo.
-	ClassDB::bind_method(D_METHOD("_emit_node_unique_renamed", "node", "old_name", "new_name"), &SceneTreeEditor::_emit_node_unique_renamed); // Used by UndoRedo.
+	ClassDB::bind_method(D_METHOD("_emit_node_unique_renamed", "node", "name_before_rename", "undo"), &SceneTreeEditor::_emit_node_unique_renamed); // Used by UndoRedo.
 
 	ClassDB::bind_method(D_METHOD("update_tree"), &SceneTreeEditor::update_tree);
 
